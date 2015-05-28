@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Orienteering</string>
+
+    <string name="action_settings">Ustawienia</string>
+    <string name="save">Zapisz</string>
+    <string name="enter_judge_phone">Wpisz nr organizatora</string>
+    <string name="enter_competitor_number">Wpisz nr startowy</string>
+</resources>
