@@ -27,9 +27,8 @@ proguard/
 # Intellij project files
 libraries/
 *.iws
-.idea/workspace.xml
-.idea/libraries
-.idea/tasks.xml
+*.iml
+.idea
  
 # Gradle directory
 .gradle

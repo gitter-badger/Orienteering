@@ -1,69 +1,64 @@
 package com.rustyclock.orienteering.model;
 
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.view.View;
+import android.widget.TextView;
+
+import com.j256.ormlite.field.DatabaseField;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import io.realm.RealmObject;
-import io.realm.annotations.PrimaryKey;
-
 /**
  * Created by Mateusz Jablonski
  * on 2015-05-27.
  */
-public class Checkpoint extends RealmObject {
 
-    public static final String URL_SCHEME = "checkpoint://";
+
+public class Checkpoint implements Comparable<Checkpoint> {
+
     public static final String SPLITTER = ":";
 
-    @PrimaryKey
-    private String checkpointId;
+    @DatabaseField(generatedId = true)
+    int dbId;
 
-    private String checkpointCode;
+    @DatabaseField
     private String scannedData;
 
+    @DatabaseField
     private Date scanDate;
 
+    @DatabaseField
     private boolean local;
 
     public Checkpoint() {
     }
 
     public Checkpoint(String data) {
-        this.scannedData = data.replace(URL_SCHEME, "");
+        this.scannedData = data;
 
         this.scanDate = new Date();
         this.local = true;
-
-        if(TextUtils.isEmpty(data))
-            return;
-
-        String[] pointParams = scannedData.split(SPLITTER);
-        checkpointId = "01" + SPLITTER + pointParams[0];
-        checkpointCode = pointParams[1];
-    }
-
-    public String getCheckpointId() {
-        return "PK" + checkpointId.split(SPLITTER)[1];
-    }
-
-    public String getCheckpointCode() {
-        return checkpointCode;
-    }
-
-    public String getScannedData() {
-        return scannedData;
-    }
-
-    public void setScannedData(String scannedData) {
-        this.scannedData = scannedData;
     }
 
     public Date getScanDate() {
         return scanDate;
+    }
+
+    public String getFormattedQr() {
+        String s = scannedData;
+        if(scannedData.contains(SPLITTER))
+            s = scannedData.replace(SPLITTER, " - ");
+
+        return s;
+    }
+
+    public String getFormattedDate() {
+        DateFormat writeFormat = new SimpleDateFormat("HH:mm:ss yyyy/MM/dd", new Locale("pl_PL"));
+        return writeFormat.format(scanDate);
     }
 
     public boolean isLocal() {
@@ -74,15 +69,43 @@ public class Checkpoint extends RealmObject {
         this.local = local;
     }
 
-    public void setCheckpointId(String checkpointId) {
-        this.checkpointId = checkpointId;
+    public String getScanHour() {
+        DateFormat writeFormat = new SimpleDateFormat("HH:mm", new Locale("pl_PL"));
+        return writeFormat.format(scanDate);
     }
 
-    public void setCheckpointCode(String checkpointCode) {
-        this.checkpointCode = checkpointCode;
+    public void displayChekpointData(TextView checkpoint, TextView code) {
+        if(scannedData.contains(SPLITTER)) {
+            String[] splits = scannedData.split(SPLITTER);
+            checkpoint.setText(splits[0]);
+            code.setText(splits[1]);
+        } else {
+            checkpoint.setText(scannedData);
+            code.setVisibility(View.GONE);
+        }
     }
 
-    public void setScanDate(Date scanDate) {
-        this.scanDate = scanDate;
+    public void displayDate(TextView date, TextView hour) {
+        String[] splits = getFormattedDate().split(" ");
+        hour.setText(splits[0]);
+        date.setText(splits[1]);
+    }
+
+    public String getSmsMesssage() {
+
+        String checkPointCode = scannedData;
+
+        if(scannedData.contains(SPLITTER)) {
+            String[] splits = scannedData.split(SPLITTER);
+            if(splits.length>1)
+                checkPointCode = splits[1];
+        }
+
+        return checkPointCode + " " + getScanHour();
+    }
+
+    @Override
+    public int compareTo(@NonNull Checkpoint ch) {
+        return ch.getScanDate().compareTo(scanDate);
     }
 }

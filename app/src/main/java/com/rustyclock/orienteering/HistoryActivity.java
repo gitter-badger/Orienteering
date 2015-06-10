@@ -1,8 +1,9 @@
 package com.rustyclock.orienteering;
 
-import android.content.Context;
-import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import android.content.DialogInterface;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,52 +11,104 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.j256.ormlite.dao.Dao;
+import com.rustyclock.orienteering.custom.ToolbarActivity;
+import com.rustyclock.orienteering.db.DbHelper;
 import com.rustyclock.orienteering.model.Checkpoint;
 
-import java.util.List;
+import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.OptionsItem;
+import org.androidannotations.annotations.OptionsMenu;
+import org.androidannotations.annotations.OrmLiteDao;
+import org.androidannotations.annotations.ViewById;
 
-import io.realm.Realm;
-import io.realm.RealmQuery;
-import io.realm.RealmResults;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by Mateusz Jablonski
  * on 2015-05-27.
  */
-public class HistoryActivity extends AppCompatActivity {
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_history);
+@EActivity(R.layout.activity_history)
+@OptionsMenu(R.menu.history)
+public class HistoryActivity extends ToolbarActivity {
 
-        Realm realm = Realm.getInstance(this);
-        RealmQuery<Checkpoint> query = realm.where(Checkpoint.class);
-        RealmResults<Checkpoint> result = query.findAll();
+    private static final String TAG = HistoryActivity.class.getSimpleName();
 
-        ListView listView = (ListView) findViewById(R.id.listView);
-        listView.setAdapter(new HistoryAdapter(result));
+    @ViewById ListView listView;
+
+    @OrmLiteDao(helper = DbHelper.class)
+    Dao<Checkpoint, Integer> checkpointsDao;
+
+    @OptionsItem(R.id.action_clear)
+    void clear() {
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.clear_history_title))
+                .setMessage(getString(R.string.clear_history_text))
+                .setNegativeButton(android.R.string.no, null)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        try {
+                            List<Checkpoint> checkpoints = checkpointsDao.queryForAll();
+                            checkpointsDao.delete(checkpoints);
+                            reloadHistory();
+                            Snackbar.make(findViewById(android.R.id.content), getString(R.string.history_clear_success), Snackbar.LENGTH_LONG).show();
+                        } catch (SQLException e) {
+                            Snackbar.make(findViewById(android.R.id.content), getString(R.string.history_clear_failed), Snackbar.LENGTH_LONG).show();
+                            e.printStackTrace();
+                        }
+                    }
+                })
+                .create();
+
+        dialog.show();
+    }
+
+    @AfterViews
+    void aftrerViews() {
+        setupToolbar(true);
+        listView.setEmptyView(findViewById(R.id.tv_empty));
+        reloadHistory();
+    }
+
+    private void reloadHistory() {
+        try {
+            List<Checkpoint> checkpoints = checkpointsDao.queryForAll();
+            Collections.sort(checkpoints);
+            listView.setAdapter(new HistoryAdapter(checkpoints));
+
+        } catch (SQLException e) {
+            Log.e(TAG, "Error reading history data", e);
+        }
     }
 
     private class HistoryAdapter extends ArrayAdapter<Checkpoint> {
 
         public HistoryAdapter(List<Checkpoint> checkpoints) {
-            super(HistoryActivity.this, android.R.layout.simple_list_item_2, checkpoints);
+            super(HistoryActivity.this, R.layout.item_checkpoint_history, checkpoints);
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            View view = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_list_item_2, parent, false);
-            TextView tv1 = (TextView) view.findViewById(android.R.id.text1);
-            TextView tv2 = (TextView) view.findViewById(android.R.id.text2);
+            View view = LayoutInflater.from(getContext()).inflate(R.layout.item_checkpoint_history, parent, false);
+            TextView tvChekpoint = (TextView) view.findViewById(R.id.tv_checkpoint);
+            TextView tvChekpointCode = (TextView) view.findViewById(R.id.tv_checkpoint_code);
+            TextView tvDate = (TextView) view.findViewById(R.id.tv_date);
+            TextView tvHour = (TextView) view.findViewById(R.id.tv_hour);
+            View status = view.findViewById(R.id.view_sms_status);
+
+            status.setVisibility(View.INVISIBLE);
 
             Checkpoint cp = getItem(position);
 
-            tv1.setText(cp.getCheckpointId() + " - " + cp.getCheckpointCode());
-            tv2.setText(cp.getScanDate().toString());
+            cp.displayChekpointData(tvChekpoint, tvChekpointCode);
+            cp.displayDate(tvDate, tvHour);
 
             return view;
         }
     }
-
 }

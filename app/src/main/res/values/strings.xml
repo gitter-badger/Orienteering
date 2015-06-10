@@ -1,8 +1,20 @@
 <resources>
-    <string name="app_name">Orienteering</string>
+    <string name="app_name">Grassor</string>
 
     <string name="action_settings">Ustawienia</string>
     <string name="save">Zapisz</string>
     <string name="enter_judge_phone">Wpisz nr organizatora</string>
     <string name="enter_competitor_number">Wpisz nr startowy</string>
+    <string name="history">Historia</string>
+    <string name="settings">Ustawienia</string>
+    <string name="sms_sent">SMS wysłano</string>
+    <string name="sms_sending_failed">Wysyłka SMS nieudana</string>
+    <string name="fill_up_settings">Uzupełnij dane w ustawieniach</string>
+    <string name="clear">Wyczyść</string>
+    <string name="clear_history_title">Usuwanie historii</string>
+    <string name="clear_history_text">Cała historia zostanie usunięta, chcesz kontynuować?</string>
+    <string name="history_clear_success">Historia została wyczyszczona</string>
+    <string name="history_clear_failed">Nie udało się wyczyścić historii</string>
+    <string name="history_empty_text">Nie posiadasz żadnych wpisów w historii</string>
+    <string name="punch_checkpoint">Podbij PK</string>
 </resources>

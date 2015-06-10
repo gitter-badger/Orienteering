@@ -13,7 +13,8 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".MainActivity"
+            android:name=".MainActivity_"
+            android:screenOrientation="portrait"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -31,8 +32,28 @@
 
         <activity android:name="com.journeyapps.barcodescanner.CaptureActivity"/>
 
-        <activity android:name=".HistoryActivity"/>
-        <activity android:name=".SettingsActivity"/>
+        <activity
+            android:name=".HistoryActivity_"
+            android:label="@string/history"
+            android:screenOrientation="portrait"
+            android:parentActivityName="com.rustyclock.orienteering.MainActivity_" >
+            <!-- Parent activity meta-data to support 4.0 and lower -->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.rustyclock.orienteering.MainActivity_" />
+        </activity>
+
+        <activity
+            android:name=".SettingsActivity_"
+            android:label="@string/settings"
+            android:screenOrientation="portrait"
+            android:parentActivityName="com.rustyclock.orienteering.MainActivity_" >
+
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.rustyclock.orienteering.MainActivity_" />
+        </activity>
+
     </application>
 
 </manifest>

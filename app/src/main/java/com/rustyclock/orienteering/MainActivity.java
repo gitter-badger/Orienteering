@@ -1,63 +1,71 @@
 package com.rustyclock.orienteering;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import android.support.design.widget.Snackbar;
 import android.telephony.SmsManager;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Toast;
 
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
+import com.j256.ormlite.dao.Dao;
+import com.rustyclock.orienteering.custom.ToolbarActivity;
+import com.rustyclock.orienteering.db.DbHelper;
 import com.rustyclock.orienteering.model.Checkpoint;
 
-import org.w3c.dom.Text;
+import org.androidannotations.annotations.AfterViews;
+import org.androidannotations.annotations.Click;
+import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.OptionsItem;
+import org.androidannotations.annotations.OptionsMenu;
+import org.androidannotations.annotations.OrmLiteDao;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
-import io.realm.Realm;
-
-
-public class MainActivity extends AppCompatActivity {
+@EActivity(R.layout.activity_main)
+@OptionsMenu(R.menu.menu_main)
+public class MainActivity extends ToolbarActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    SharedPreferences preferences;
+    Prefs_ prefs;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    @OrmLiteDao(helper = DbHelper.class)
+    Dao<Checkpoint, Integer> checkpointsDao;
 
-        findViewById(R.id.btn_scan).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                IntentIntegrator integrator = new IntentIntegrator(MainActivity.this);
-                integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES);
-                integrator.initiateScan();
-            }
-        });
+    @AfterViews
+    void afterViews() {
+        setupToolbar(false);
+        setToolbarIcon(R.mipmap.ic_launcher);
+    }
 
-        findViewById(R.id.btn_history).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, HistoryActivity.class));
-            }
-        });
+    @Click(R.id.btn_scan)
+    void scan() {
+
+        String phoneNo = prefs.phoneNo().get();
+        if(TextUtils.isEmpty(phoneNo)) {
+            Snackbar.make(findViewById(android.R.id.content), R.string.fill_up_settings, Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        IntentIntegrator integrator = new IntentIntegrator(MainActivity.this);
+        integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES);
+        integrator.initiateScan();
+    }
+
+    @Click(R.id.btn_history)
+    void history() {
+        HistoryActivity_.intent(this).start();
+    }
+
+    @OptionsItem(R.id.action_settings)
+    void settings() {
+        SettingsActivity_.intent(this).start();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        preferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        prefs = new Prefs_(this);
     }
 
     @Override
@@ -70,17 +78,12 @@ public class MainActivity extends AppCompatActivity {
             return;
 
         Checkpoint cp = new Checkpoint(result.getContents());
-        Realm realm = Realm.getInstance(this);
 
         try {
-            realm.beginTransaction();
-            realm.copyToRealm(cp);
-            realm.commitTransaction();
-
+            checkpointsDao.create(cp);
             sendCheckpointSMS(cp);
 
         } catch (Exception e) {
-            realm.cancelTransaction();
             e.printStackTrace();
         }
 
@@ -89,46 +92,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void sendCheckpointSMS(Checkpoint cp) {
 
-        String phoneNo = preferences.getString("phone", "");
-        String competitor = preferences.getString("competitorNo", "");
-        if(TextUtils.isEmpty(phoneNo) || TextUtils.isEmpty(competitor)) {
-            Toast.makeText(this, "Uzupełnij dane w ustawieniach", Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        DateFormat writeFormat = new SimpleDateFormat("HH:mm:ss");
-        String date = writeFormat.format(cp.getScanDate());
-
-        String message = competitor;
-        message += Checkpoint.SPLITTER + cp.getCheckpointId();
-        message += Checkpoint.SPLITTER + cp.getCheckpointCode();
-        message += Checkpoint.SPLITTER + date;
-
         try {
             SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(phoneNo, null, message, null, null);
-            Toast.makeText(getApplicationContext(), "SMS wysłano.", Toast.LENGTH_LONG).show();
+            smsManager.sendTextMessage(prefs.phoneNo().get(), null, cp.getSmsMesssage(), null, null);
+            Snackbar.make(findViewById(android.R.id.content), R.string.sms_sent, Snackbar.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(getApplicationContext(), "Wysyłka SMS nieudana",  Toast.LENGTH_LONG).show();
-            e.printStackTrace();
+            Snackbar.make(findViewById(android.R.id.content), R.string.sms_sending_failed, Snackbar.LENGTH_LONG).show();
+            Log.e(TAG, e.getLocalizedMessage());
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_settings) {
-            startActivity(new Intent(this, SettingsActivity.class));
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 }
