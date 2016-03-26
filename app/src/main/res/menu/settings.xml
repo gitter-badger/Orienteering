@@ -4,7 +4,7 @@
 
     <item android:id="@+id/action_save"
         android:title="@string/save"
-        android:icon="@drawable/ic_done_white_24dp"
+        android:icon="@drawable/icon_done"
         android:orderInCategory="100"
         app:showAsAction="always" />
 </menu>

@@ -1,13 +1,18 @@
 package com.rustyclock.orienteering;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.design.widget.Snackbar;
+import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -18,10 +23,12 @@ import com.rustyclock.orienteering.model.Checkpoint;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.ItemClick;
 import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.OptionsMenu;
-import org.androidannotations.annotations.OrmLiteDao;
 import org.androidannotations.annotations.ViewById;
+import org.androidannotations.annotations.sharedpreferences.Pref;
+import org.androidannotations.ormlite.annotations.OrmLiteDao;
 
 import java.sql.SQLException;
 import java.util.Collections;
@@ -39,6 +46,9 @@ public class HistoryActivity extends ToolbarActivity {
     private static final String TAG = HistoryActivity.class.getSimpleName();
 
     @ViewById ListView listView;
+    @ViewById(R.id.swiperefresh) SwipeRefreshLayout swipeRefreshLayout;
+
+    @Pref Prefs_ prefs;
 
     @OrmLiteDao(helper = DbHelper.class)
     Dao<Checkpoint, Integer> checkpointsDao;
@@ -68,10 +78,30 @@ public class HistoryActivity extends ToolbarActivity {
         dialog.show();
     }
 
+    @ItemClick(R.id.listView)
+    public void checkPointClicked(Checkpoint cp) {
+
+        if(cp.getStatus()==Checkpoint.STATUS_SENT || cp.getStatus()==Checkpoint.STATUS_DELIVERED)
+            return;
+
+        Intent n = new Intent(Intent.ACTION_VIEW);
+        n.setType("vnd.android-dir/mms-sms");
+        n.putExtra("address", prefs.phoneNo().get());
+        startActivity(n);
+    }
+
     @AfterViews
     void aftrerViews() {
         setupToolbar(true);
         listView.setEmptyView(findViewById(R.id.tv_empty));
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                reloadHistory();
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
         reloadHistory();
     }
 
@@ -99,11 +129,11 @@ public class HistoryActivity extends ToolbarActivity {
             TextView tvChekpointCode = (TextView) view.findViewById(R.id.tv_checkpoint_code);
             TextView tvDate = (TextView) view.findViewById(R.id.tv_date);
             TextView tvHour = (TextView) view.findViewById(R.id.tv_hour);
-            View status = view.findViewById(R.id.view_sms_status);
-
-            status.setVisibility(View.INVISIBLE);
+            ImageView status = (ImageView) view.findViewById(R.id.view_sms_status);
 
             Checkpoint cp = getItem(position);
+
+            DrawableCompat.setTint(status.getDrawable(), cp.getStatusColor(getResources()));
 
             cp.displayChekpointData(tvChekpoint, tvChekpointCode);
             cp.displayDate(tvDate, tvHour);

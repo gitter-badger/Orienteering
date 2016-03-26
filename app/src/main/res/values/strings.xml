@@ -1,9 +1,10 @@
 <resources>
-    <string name="app_name">Grassor</string>
+    <string name="app_name">CheckPoint</string>
 
     <string name="action_settings">Ustawienia</string>
     <string name="save">Zapisz</string>
-    <string name="enter_judge_phone">Wpisz nr organizatora</string>
+    <string name="judge_phone">Nr organizatora</string>
+    <string name="judge_phone_hint">Podaj numer na który będą wysyłane SMSy</string>
     <string name="enter_competitor_number">Wpisz nr startowy</string>
     <string name="history">Historia</string>
     <string name="settings">Ustawienia</string>
@@ -16,5 +17,15 @@
     <string name="history_clear_success">Historia została wyczyszczona</string>
     <string name="history_clear_failed">Nie udało się wyczyścić historii</string>
     <string name="history_empty_text">Nie posiadasz żadnych wpisów w historii</string>
-    <string name="punch_checkpoint">Podbij PK</string>
+    <string name="punch_checkpoint">Podbij</string>
+
+    <string name="pref_phone_no">phone_no</string>
+
+    <string name="sms_status_sent">SMS wysłany</string>
+    <string name="sms_status_failure">Błąd nieznany</string>
+    <string name="sms_status_no_service">Brak zasięgu</string>
+    <string name="sms_status_pdu">Problem z SMSem</string>
+    <string name="sms_status_radio_off">Sieć odłaczona</string>
+    <string name="sms_status_delivered">SMS dostarczony</string>
+    <string name="sms_status_no_delivery">SMS nie dostarczony</string>
 </resources>

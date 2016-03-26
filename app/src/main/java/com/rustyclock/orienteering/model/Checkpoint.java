@@ -1,11 +1,13 @@
 package com.rustyclock.orienteering.model;
 
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
 
 import com.j256.ormlite.field.DatabaseField;
+import com.rustyclock.orienteering.R;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -22,6 +24,12 @@ public class Checkpoint implements Comparable<Checkpoint> {
 
     public static final String SPLITTER = ":";
 
+    public static final int STATUS_RECOGNIZED = 1;
+    public static final int STATUS_SENDING = 2;
+    public static final int STATUS_SENT = 3;
+    public static final int STATUS_DELIVERED = 4;
+    public static final int STATUS_FAILED = 5;
+
     @DatabaseField(generatedId = true)
     int dbId;
 
@@ -32,7 +40,7 @@ public class Checkpoint implements Comparable<Checkpoint> {
     private Date scanDate;
 
     @DatabaseField
-    private boolean local;
+    private int status;
 
     public Checkpoint() {
     }
@@ -41,36 +49,15 @@ public class Checkpoint implements Comparable<Checkpoint> {
         this.scannedData = data;
 
         this.scanDate = new Date();
-        this.local = true;
+        this.status = STATUS_RECOGNIZED;
     }
 
     public Date getScanDate() {
         return scanDate;
     }
 
-    public String getFormattedQr() {
-        String s = scannedData;
-        if(scannedData.contains(SPLITTER))
-            s = scannedData.replace(SPLITTER, " - ");
-
-        return s;
-    }
-
-    public String getFormattedDate() {
-        DateFormat writeFormat = new SimpleDateFormat("HH:mm:ss yyyy/MM/dd", new Locale("pl_PL"));
-        return writeFormat.format(scanDate);
-    }
-
-    public boolean isLocal() {
-        return local;
-    }
-
-    public void setLocal(boolean local) {
-        this.local = local;
-    }
-
-    public String getScanHour() {
-        DateFormat writeFormat = new SimpleDateFormat("HH:mm", new Locale("pl_PL"));
+    public String getFormattedDate(boolean withSeconds) {
+        DateFormat writeFormat = new SimpleDateFormat("HH:mm" + (withSeconds ? ":ss" : "") + " dd/MM/yyyy", new Locale("pl_PL"));
         return writeFormat.format(scanDate);
     }
 
@@ -86,7 +73,7 @@ public class Checkpoint implements Comparable<Checkpoint> {
     }
 
     public void displayDate(TextView date, TextView hour) {
-        String[] splits = getFormattedDate().split(" ");
+        String[] splits = getFormattedDate(true).split(" ");
         hour.setText(splits[0]);
         date.setText(splits[1]);
     }
@@ -101,7 +88,34 @@ public class Checkpoint implements Comparable<Checkpoint> {
                 checkPointCode = splits[1];
         }
 
-        return checkPointCode + " " + getScanHour();
+        return checkPointCode + " " + getFormattedDate(false);
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public int getStatusColor(Resources res) {
+
+        int color = R.color.divider;
+
+        switch (status) {
+            case STATUS_RECOGNIZED:
+            case STATUS_SENDING: color = R.color.divider; break;
+            case STATUS_SENT: color = R.color.yellow; break;
+            case STATUS_DELIVERED: color = R.color.primary; break;
+            case STATUS_FAILED: color = R.color.red; break;
+        }
+
+        return res.getColor(color);
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public int getDbId() {
+        return dbId;
     }
 
     @Override

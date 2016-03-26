@@ -1,5 +1,6 @@
 package com.rustyclock.orienteering;
 
+import org.androidannotations.annotations.sharedpreferences.DefaultString;
 import org.androidannotations.annotations.sharedpreferences.SharedPref;
 
 /**
@@ -9,6 +10,7 @@ import org.androidannotations.annotations.sharedpreferences.SharedPref;
 @SharedPref(value = SharedPref.Scope.UNIQUE)
 public interface Prefs {
 
+    @DefaultString(value = "", keyRes = R.string.pref_phone_no)
     String phoneNo();
 
 }

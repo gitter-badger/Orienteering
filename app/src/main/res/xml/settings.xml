@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditTextPreference
+        android:key="phone_no"
+        android:title="@string/judge_phone"
+        android:summary="@string/judge_phone_hint"
+        android:phoneNumber="true"/>
+</PreferenceScreen>

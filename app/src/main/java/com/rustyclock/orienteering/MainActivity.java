@@ -1,5 +1,6 @@
 package com.rustyclock.orienteering;
 
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.support.design.widget.Snackbar;
 import android.telephony.SmsManager;
@@ -18,7 +19,7 @@ import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.OptionsMenu;
-import org.androidannotations.annotations.OrmLiteDao;
+import org.androidannotations.ormlite.annotations.OrmLiteDao;
 
 
 @EActivity(R.layout.activity_main)
@@ -40,7 +41,6 @@ public class MainActivity extends ToolbarActivity {
 
     @Click(R.id.btn_scan)
     void scan() {
-
         String phoneNo = prefs.phoneNo().get();
         if(TextUtils.isEmpty(phoneNo)) {
             Snackbar.make(findViewById(android.R.id.content), R.string.fill_up_settings, Snackbar.LENGTH_LONG).show();
@@ -49,6 +49,7 @@ public class MainActivity extends ToolbarActivity {
 
         IntentIntegrator integrator = new IntentIntegrator(MainActivity.this);
         integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES);
+        integrator.setPrompt("");
         integrator.initiateScan();
     }
 
@@ -92,10 +93,23 @@ public class MainActivity extends ToolbarActivity {
 
     private void sendCheckpointSMS(Checkpoint cp) {
 
+        Intent sentIntent = new Intent(SmsStatusReceiver.SENT_INTENT);
+        sentIntent.putExtra(SmsStatusReceiver.EXTRA_ID_SENT, cp.getDbId());
+
+        Intent deliveryIntent = new Intent(SmsStatusReceiver.DELIVERED_INTENT);
+        deliveryIntent.putExtra(SmsStatusReceiver.EXTRA_ID_DELIVER, cp.getDbId());
+
+        PendingIntent sentPI = PendingIntent.getBroadcast(this, 0,sentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent deliveredPI = PendingIntent.getBroadcast(this, 0, deliveryIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
         try {
+            cp.setStatus(Checkpoint.STATUS_SENDING);
+            checkpointsDao.update(cp);
+
+            Log.d(TAG, "Sending SMS of checkpoint" + cp.getDbId());
+
             SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(prefs.phoneNo().get(), null, cp.getSmsMesssage(), null, null);
-            Snackbar.make(findViewById(android.R.id.content), R.string.sms_sent, Snackbar.LENGTH_LONG).show();
+            smsManager.sendTextMessage(prefs.phoneNo().get(), null, cp.getSmsMesssage(), sentPI, deliveredPI);
         } catch (Exception e) {
             Snackbar.make(findViewById(android.R.id.content), R.string.sms_sending_failed, Snackbar.LENGTH_LONG).show();
             Log.e(TAG, e.getLocalizedMessage());

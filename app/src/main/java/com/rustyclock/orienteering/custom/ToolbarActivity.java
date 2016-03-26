@@ -1,5 +1,6 @@
 package com.rustyclock.orienteering.custom;
 
+import android.os.Build;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -31,7 +32,12 @@ public class ToolbarActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                NavUtils.navigateUpFromSameTask(this);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    if(getParentActivityIntent()!=null)
+                        NavUtils.navigateUpFromSameTask(this);
+                } else {
+                    onBackPressed();
+                }
                 return true;
         }
         return super.onOptionsItemSelected(item);

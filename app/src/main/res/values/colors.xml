@@ -11,4 +11,7 @@
 
     <color name="history">#00BCD4</color>
 
+    <color name="red">#f44336</color>
+    <color name="yellow">#FFC107</color>
+
 </resources>

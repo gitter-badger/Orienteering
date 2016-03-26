@@ -15,7 +15,20 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
--keepnames public class * extends io.realm.RealmObject
--keep class io.realm.** { *; }
--dontwarn javax.**
--dontwarn io.realm.**
+#OrmLite uses reflection
+-keep class com.j256.**
+-keepclassmembers class com.j256.** { *; }
+-keep enum com.j256.**
+-keepclassmembers enum com.j256.** { *; }
+-keep interface com.j256.**
+-keepclassmembers interface com.j256.** { *; }
+
+#Android annotations
+-dontwarn org.androidannotations.**
+-dontwarn com.sun.codemodel.util.SingleByteEncoder
+
+-keepattributes *Annotation*
+
+-keepclassmembers class * {
+  public <init>(android.content.Context);
+}

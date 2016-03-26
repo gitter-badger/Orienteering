@@ -35,3 +35,6 @@ libraries/
  
 # OS
 .DS_Store
+
+signing.gradle
+keystore.jks
