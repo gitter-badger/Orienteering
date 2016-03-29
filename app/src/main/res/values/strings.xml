@@ -17,7 +17,7 @@
     <string name="history_clear_success">Historia została wyczyszczona</string>
     <string name="history_clear_failed">Nie udało się wyczyścić historii</string>
     <string name="history_empty_text">Nie posiadasz żadnych wpisów w historii</string>
-    <string name="punch_checkpoint">Podbij</string>
+    <string name="punch_checkpoint">Podbij PK</string>
 
     <string name="pref_phone_no">phone_no</string>
 
@@ -28,4 +28,8 @@
     <string name="sms_status_radio_off">Sieć odłaczona</string>
     <string name="sms_status_delivered">SMS dostarczony</string>
     <string name="sms_status_no_delivery">SMS nie dostarczony</string>
+    <string name="send_code">Potwierdź PK ręcznie</string>
+    <string name="enter_code">Przepisz kod</string>
+    <string name="send">Wyślij</string>
+    <string name="cancel">Anuluj</string>
 </resources>

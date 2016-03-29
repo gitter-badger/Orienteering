@@ -42,6 +42,9 @@ public class Checkpoint implements Comparable<Checkpoint> {
     @DatabaseField
     private int status;
 
+    @DatabaseField
+    private boolean manual;
+
     public Checkpoint() {
     }
 
@@ -57,7 +60,7 @@ public class Checkpoint implements Comparable<Checkpoint> {
     }
 
     public String getFormattedDate(boolean withSeconds) {
-        DateFormat writeFormat = new SimpleDateFormat("HH:mm" + (withSeconds ? ":ss" : "") + " dd/MM/yyyy", new Locale("pl_PL"));
+        DateFormat writeFormat = new SimpleDateFormat("HH:mm" + (withSeconds ? ":ss" : "") + " dd-MM-yyyy", new Locale("pl_PL"));
         return writeFormat.format(scanDate);
     }
 
@@ -67,8 +70,8 @@ public class Checkpoint implements Comparable<Checkpoint> {
             checkpoint.setText(splits[0]);
             code.setText(splits[1]);
         } else {
-            checkpoint.setText(scannedData);
-            code.setVisibility(View.GONE);
+            checkpoint.setText(manual ? "R" : "-");
+            code.setText(scannedData);
         }
     }
 
@@ -114,6 +117,14 @@ public class Checkpoint implements Comparable<Checkpoint> {
         this.status = status;
     }
 
+    public boolean isManual() {
+        return manual;
+    }
+
+    public void setManual(boolean manual) {
+        this.manual = manual;
+    }
+
     public int getDbId() {
         return dbId;
     }
@@ -121,5 +132,11 @@ public class Checkpoint implements Comparable<Checkpoint> {
     @Override
     public int compareTo(@NonNull Checkpoint ch) {
         return ch.getScanDate().compareTo(scanDate);
+    }
+
+    public void setCode(String code) {
+        scannedData = code;
+        scanDate = new Date();
+        status = STATUS_RECOGNIZED;
     }
 }

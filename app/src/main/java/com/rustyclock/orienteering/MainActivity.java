@@ -1,11 +1,15 @@
 package com.rustyclock.orienteering;
 
 import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.telephony.SmsManager;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
 
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
@@ -20,6 +24,8 @@ import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.OptionsItem;
 import org.androidannotations.annotations.OptionsMenu;
 import org.androidannotations.ormlite.annotations.OrmLiteDao;
+
+import java.sql.SQLException;
 
 
 @EActivity(R.layout.activity_main)
@@ -51,6 +57,36 @@ public class MainActivity extends ToolbarActivity {
         integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE_TYPES);
         integrator.setPrompt("");
         integrator.initiateScan();
+    }
+
+    @Click(R.id.btn_send)
+    void showSendDialog() {
+        View v = getLayoutInflater().inflate(R.layout.dialog_send_code, null);
+        final EditText et = (EditText) v.findViewById(R.id.et_code);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.send_code)
+                .setView(v)
+                .setPositiveButton(R.string.send, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String s = et.getText().toString();
+                        if(TextUtils.isEmpty(s) || s.length()<2)
+                            return;
+
+                        Checkpoint cp = new Checkpoint();
+                        cp.setManual(true);
+                        cp.setCode(s);
+
+                        try {
+                            checkpointsDao.create(cp);
+                            sendCheckpointSMS(cp);
+                        } catch (SQLException e) {
+                            Log.e(TAG, e.getMessage());
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .create().show();
     }
 
     @Click(R.id.btn_history)
